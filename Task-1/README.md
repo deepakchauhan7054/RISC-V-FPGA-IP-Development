@@ -9,17 +9,17 @@
 ### A. RISC-V Reference Program Execution
 The reference C application (`sum1ton.c`) was compiled with the `riscv64-unknown-elf-gcc` cross-compiler and simulated using the Spike ISA simulator coupled with the RISC-V Proxy Kernel (`pk`).
 
-![RISC-V Reference Execution](./images/riscv_reference_execution.png)
+![RISC-V Reference Execution](./Screenshots/riscv_reference_execution.png)
 
 ### B. VSDFPGA Lab Bring-Up
 The `vsdfpga_labs` repository was integrated into the workspace. The reference firmware (`riscv_logo.c`) was built using the embedded bare-metal toolchain (`-march=rv32i -mabi=ilp32`), generating the target execution ELF and block RAM image (`riscv_logo.bram.hex`).
 
-![VSDFPGA Lab Build](./images/vsdfpga_lab_simulation.png)
+![VSDFPGA Lab Build](./Screenshots/vsdfpga_lab_simulation.png)
 
 ### C. Optional Confidence Task (Program Modification)
 The loop bound in `sum1ton.c` was adjusted from `n = 9` to `n = 10`. The source was recompiled and simulated via Spike, confirming the expected output `Sum from 1 to 10 is 55`.
 
-![Confidence Task](./images/confidence_task_output.png)
+![Confidence Task](./Screenshots/confidence_task_output.png)
 
 ---
 
