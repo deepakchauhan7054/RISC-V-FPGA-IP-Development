@@ -27,18 +27,19 @@ The loop bound in `sum1ton.c` was adjusted from `n = 9` to `n = 10`. The source 
 
 ### Q1: Where is the RISC-V program located in the vsd-riscv2 repository?
 **Answer:**  
-In the `vsd-riscv2` environment, sample application programs are located inside the `samples/` directory (e.g., `samples/sum1ton.c`, `samples/1ton_custom.c`). In the cloned `vsdfpga_labs` repository, the reference firmware files are located under `basicRISCV/Firmware/` (e.g., `riscv_logo.c`).
+In the `vsd-riscv2` repository, the sample C programs (such as `sum1ton.c`) are located inside the `samples/` folder. In the `vsdfpga_labs` repository, the RISC-V firmware source code (such as `riscv_logo.c`) is located in the `basicRISCV/Firmware/` folder.
 
 ### Q2: How is the program compiled and loaded into memory?
 **Answer:**  
-The source code is compiled into an ELF binary using the RISC-V GNU cross-compiler (`riscv64-unknown-elf-gcc`) configured with target architectural flags and a linker script (such as `bram.ld`).  
-* **In Spike ISA simulation:** The RISC-V Proxy Kernel (`pk`) parses the ELF headers, handles segment mapping, and loads the instructions into simulated memory.
-* **In HDL/FPGA bring-up:** The compiled ELF binary is converted via firmware utilities into a Verilog-readable memory initialization file (`riscv_logo.bram.hex`), which is loaded into synthesized Block RAM (BRAM) or read during RTL simulation using the `$readmemh` system task.
+* **Compilation:** We use the RISC-V cross-compiler (`riscv64-unknown-elf-gcc`) to translate human-readable C code into RISC-V machine instructions, producing an ELF binary executable.
+* **Loading into Memory:** 
+  * In the Spike ISA simulator, the Proxy Kernel (`pk`) reads the ELF binary and loads the program instructions directly into the simulated memory space.
+  * In FPGA/Verilog simulation, the ELF executable is converted into a hexadecimal text file (`riscv_logo.bram.hex`), which is loaded directly into the FPGA's on-chip Block RAM (BRAM) using the `$readmemh` directive.
 
 ### Q3: How does the RISC-V core access memory and memory-mapped IO?
 **Answer:**  
-The core performs standard load and store instructions (`lb`, `lh`, `lw`, `ld`, `sb`, `sh`, `sw`, `sd`). The system implements a unified memory map where physical RAM and memory-mapped I/O (MMIO) registers (such as UART, GPIO, and timers) share the same address space. When a memory access is triggered, the system bus/interconnect decodes the upper address lines to route the transaction to physical RAM if within the RAM region, or to the appropriate peripheral control/status registers if within the MMIO region.
+The processor uses standard assembly load and store instructions (`lw` to read data, `sw` to write data) for both memory and peripherals. The system uses a shared address map: an address decoder checks the address being accessed. If the address points to RAM, it reads/writes memory; if it falls within a peripheral's address range (like UART or GPIO), it talks directly to that peripheral's registers.
 
 ### Q4: Where would a new FPGA IP block logically integrate in this system?
 **Answer:**  
-A new FPGA IP block logically connects as a slave peripheral on the on-chip system bus/interconnect (such as Wishbone, AXI-Lite, or TileLink). It is allocated an address aperture in the system address map, enabling the RISC-V processor to configure, write to, and read from the IP's internal control and data registers via standard MMIO operations.
+A new FPGA IP block is connected to the system bus (such as Wishbone or AXI) as a peripheral slave. It is assigned a specific address range in the system memory map so the RISC-V CPU can control it and exchange data simply by reading and writing to those designated addresses.
