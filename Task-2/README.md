@@ -4,8 +4,6 @@
 
 The objective of this task was to design a simple 32-bit GPIO IP, integrate it with the existing RISC-V SoC using memory-mapped I/O, and verify its operation through simulation.
 
-# Task-2: Design & Integrate a Memory-Mapped GPIO IP
-
 ## 1. GPIO IP RTL
 
 A simple 32-bit memory-mapped GPIO IP was designed in Verilog.
