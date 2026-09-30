@@ -1,74 +1,118 @@
-# Task-2: Memory-Mapped GPIO IP
+# Task-2: Design & Integrate a Memory-Mapped GPIO IP
 
 ## Objective
 
-Designed a simple 32-bit GPIO IP, integrated it with the existing RISC-V SoC using memory-mapped I/O, and verified it through simulation.
+The objective of this task was to design a simple 32-bit GPIO IP, integrate it with the existing RISC-V SoC using memory-mapped I/O, and verify its operation through simulation.
 
----
+## 1. GPIO IP Design
 
-## 1. GPIO IP
+A simple 32-bit GPIO IP was designed with:
 
-Created the GPIO module in:
+- 32-bit GPIO register
+- Write operation from the CPU
+- Readback of the stored value
+- GPIO output reflecting the stored register value
+- Synchronous register update
 
-```text
-RTL/gpio.v
-```
+RTL file:
 
-The IP contains a 32-bit register. A CPU write stores the value, which is available on `gpio_out` and can also be read back.
+`RTL/gpio.v`
 
-```verilog
-always @(posedge clk) begin
-    if (gpio_write)
-        gpio_reg <= gpio_wdata;
-end
+## 2. Memory-Mapped Integration
 
-assign gpio_out  = gpio_reg;
-assign gpio_rdata = gpio_reg;
-```
+The GPIO IP was connected to the existing RISC-V SoC memory-mapped I/O interface.
 
----
+The existing peripheral decoding uses address bits as follows:
 
-## 2. Standalone GPIO Test
+| Address Bit | Peripheral |
+|-------------|------------|
+| Bit 0 | LED |
+| Bit 1 | UART Data |
+| Bit 2 | UART Status |
+| Bit 3 | GPIO |
 
-Before SoC integration, the GPIO was tested using:
+The GPIO register is therefore accessed using the GPIO offset:
 
-```text
-RTL/gpio_tb.v
-```
+`0x20`
+
+The current implementation uses:
+
+`0x00400020`
+
+for the GPIO register.
+
+## 3. Standalone Verification
+
+Before integrating the GPIO with the CPU, the GPIO module was tested independently using a Verilog testbench.
+
+Testbench:
+
+`RTL/gpio_tb.v`
 
 Test value:
 
-```text
-0x12345678
-```
+`0x12345678`
 
-Result:
+Simulation result:
 
-```text
-GPIO OUT  = 12345678
-GPIO READ = 12345678
-GPIO TEST PASSED
-```
+    GPIO OUT  = 12345678
+    GPIO READ = 12345678
+    GPIO TEST PASSED
+
+This confirms that the GPIO register correctly stores the written value and provides the same value for output and readback.
 
 ![GPIO Standalone Test](screenshots/1_gpio_standalone.png)
 
----
+## 4. Firmware
 
-## 3. RISC-V Integration
+A C firmware program was created to test CPU access to the GPIO register.
 
-The GPIO was integrated into `riscv.v`.
+Firmware:
 
-GPIO decoder bit:
+`Firmware/gpio_test.c`
 
-```verilog
-localparam IO_GPIO_bit = 3;
-```
+The firmware:
 
-Peripheral mapping:
+1. Writes `0x12345678` to the GPIO register.
+2. Reads the value back.
+3. Compares the read value with the written value.
+4. Reports whether the test passed or failed through UART.
 
-```text
-bit 0 → LED
-bit 1 → UART data
-bit 2 → UART status
-bit 3 → GPIO
-```
+The firmware was compiled and converted into the required `firmware.hex` format for simulation.
+
+![Firmware Generation](screenshots/2_firmware_generation.png)
+
+## 5. CPU + GPIO SoC Verification
+
+A CPU-level testbench was created to verify the complete memory-mapped GPIO path.
+
+Testbench:
+
+`RTL/gpio_soc_tb.v`
+
+The simulation verified that the RISC-V CPU can access the GPIO using its memory-mapped address.
+
+Simulation result:
+
+    GPIO WRITE: addr=00400020 data=12345678
+    GPIO OUTPUT VERIFIED: 12345678
+    GPIO CPU TEST PASSED
+
+![CPU + GPIO Simulation](screenshots/3_cpu_gpio_soc_simulation.png)
+
+## 6. Data Flow
+
+    Firmware
+       ↓
+    RISC-V CPU
+       ↓
+    Memory-Mapped I/O
+       ↓
+    Address Decoder
+       ↓
+    GPIO IP
+       ↓
+    GPIO Register
+       ↓
+    GPIO Output
+
