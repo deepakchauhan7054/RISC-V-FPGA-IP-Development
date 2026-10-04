@@ -32,6 +32,7 @@ For example:
 
 ```text
 GPIO_DIR = 0xFFFFFFFF
+```
 
 
 ## Simulation Evidence / Screenshots
